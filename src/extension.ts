@@ -12,6 +12,7 @@ import { ConfigFS } from './common/configFileSystem';
 import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
+import { SQLHistory } from './common/sqlHistory';
 
 
 // this method is called when your extension is activated
@@ -25,21 +26,42 @@ export async function activate(context: vscode.ExtensionContext) {
   let treeProvider: PostgreSQLTreeDataProvider = PostgreSQLTreeDataProvider.getInstance(context);
   Global.context = context;
   EditorState.getInstance(languageClient);
+  
+  // 初始化 SQL 历史记录
+  SQLHistory.getInstance();
 
   try {
     let commandPath = context.asAbsolutePath(path.join('out', 'commands'));
+    console.log('Loading commands from:', commandPath);
+    
     let files = fs.readdirSync(commandPath);
+    console.log('Found command files:', files);
+    
     for (const file of files) {
       if (path.extname(file) === '.map') continue;
       let baseName = path.basename(file, '.js');
       let className = baseName + 'Command';
-
-      let commandClass = require(`./commands/${baseName}`);
-      new commandClass[className](context);
+      
+      try {
+        console.log(`Loading command: ${baseName}, class: ${className}`);
+        let commandClass = require(`./commands/${baseName}`);
+        console.log('Command module loaded:', Object.keys(commandClass));
+        
+        if (!commandClass[className]) {
+          console.error(`Class ${className} not found in module`);
+          continue;
+        }
+        
+        new commandClass[className](context);
+        console.log(`Successfully registered command: vscode-postgres.${baseName}`);
+      } catch (cmdErr) {
+        console.error(`Error loading command ${baseName}:`, cmdErr);
+      }
     }
   }
   catch (err) {
     console.error('Command loading error:', err);
+    vscode.window.showErrorMessage(`Failed to load PostgreSQL commands: ${err.message}`);
   }
 
   Global.ResultManager = new ResultsManager();

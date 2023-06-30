@@ -3,14 +3,29 @@ import * as vscode from 'vscode';
 import { IConnection } from "../common/IConnection";
 import { EditorState } from "../common/editorState";
 
-'use strict';
+class newQueryCommand extends BaseCommand {
+  async run(treeNode?: any): Promise<void> {
+    try {
+      // Create a new untitled document with postgres language
+      const textDocument = await vscode.workspace.openTextDocument({
+        language: 'postgres',
+        content: ''
+      });
 
-export class newQueryCommand extends BaseCommand {
-  async run(treeNode: any) {
-    // should have a connection object on it
-    const textDocument = await vscode.workspace.openTextDocument({content: '', language: 'postgres'});
-    await vscode.window.showTextDocument(textDocument);
-    if (treeNode && treeNode.connection)
-      EditorState.connection = treeNode.connection;
+      // Show the new document
+      const editor = await vscode.window.showTextDocument(textDocument);
+
+      // Set connection if provided
+      if (treeNode?.connection) {
+        EditorState.connection = treeNode.connection;
+      }
+
+      console.log('Successfully created new query document');
+    } catch (err) {
+      console.error('Error creating new query:', err);
+      throw err;
+    }
   }
 }
+
+export { newQueryCommand };

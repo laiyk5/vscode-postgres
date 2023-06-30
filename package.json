@@ -112,6 +112,11 @@
     ],
     "commands": [
       {
+        "command": "vscode-postgres.viewHistory",
+        "title": "View History",
+        "category": "PostgreSQL"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
