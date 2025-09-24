@@ -1,0 +1,7 @@
+site_name: CS5351 Software Engineering
+theme: material
+plugins: 
+  - search
+  - blog
+url: https://laiyk.github.io/vscode-postgres
+repo_url: https://github.com/laiyk/vscode-postgres
