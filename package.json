@@ -108,6 +108,11 @@
         "command": "vscode-postgres.runQuery",
         "key": "f5",
         "when": "editorLangId == postgres"
+      },
+      {
+        "command": "vscode-postgres.analyzeQueryPlan",
+        "key": "ctrl+shift+f5",
+        "when": "editorLangId == postgres"
       }
     ],
     "commands": [
@@ -213,6 +218,11 @@
           "light": "./resources/light/save.svg",
           "dark": "./resources/dark/save.svg"
         }
+      },
+      {
+        "command": "vscode-postgres.analyzeQueryPlan",
+        "title": "Analyze Query Plan",
+        "category": "PostgreSQL"
       }
     ],
     "menus": {
@@ -292,6 +302,11 @@
         },
         {
           "command": "vscode-postgres.runQuery",
+          "when": "editorLangId == postgres",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-postgres.analyzeQueryPlan",
           "when": "editorLangId == postgres",
           "group": "navigation"
         }
@@ -458,7 +473,7 @@
   "dependencies": {
     "csv-stringify": "^5.6.2",
     "easyxml": "^2.0.1",
-    "pg": "^8.6.0",
+    "pg": "^8.16.3",
     "postgres-array": "^3.0.2",
     "uuid": "^8.3.2",
     "vscode-languageclient": "^7.0.0",

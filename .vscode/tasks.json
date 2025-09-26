@@ -4,17 +4,79 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build Extension",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "npm: build-preview",
+                "npm: compile"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "type": "npm",
+            "script": "compile",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "label": "npm: compile",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "Compile TypeScript files"
+        },
+        {
+            "type": "npm",
+            "script": "build-preview",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [],
+            "label": "npm: build-preview",
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "NODE_OPTIONS": "--openssl-legacy-provider"
+                }
+            },
+            "detail": "Build preview with webpack"
+        },
+        {
             "type": "npm",
             "script": "watch",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
+            "group": "build",
             "presentation": {
-                "reveal": "never"
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "label": "npm: watch",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "detail": "Watch TypeScript files for changes",
+            "isBackground": true
         }
     ]
 }

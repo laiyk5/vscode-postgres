@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import PostgreSQLLanguageClient from './language/client';
-import { PostgreSQLTreeDataProvider } from './tree/treeProvider';
+import { PostgreSQLTreeDataProvider } from './tree/treeProvider'; 
 import { Global } from './common/global';
 import { EditorState } from './common/editorState';
 import { ConfigFS } from './common/configFileSystem';
@@ -16,7 +16,7 @@ import { Constants } from './common/constants';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext) {
   
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
