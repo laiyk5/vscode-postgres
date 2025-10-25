@@ -131,7 +131,7 @@
             "command": "vscode-postgres.sqlLintSelection",
             "when": "editorLangId == postgres && editorHasSelection",
             "group": "navigation",
-            "title": "Lint Selection"
+            "title": "好像不做也行"
         },
       {
         "command": "vscode-postgres.addConnection",
