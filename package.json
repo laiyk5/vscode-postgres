@@ -44,6 +44,17 @@
       "type": "object",
       "title": "PostgreSQL",
       "properties": {
+        "vscode-postgres.sqlLint.caseStyle": {
+            "type": "string",
+            "enum": ["upper", "lower"],
+            "default": "upper",
+            "description": "SQL关键字大小写风格"
+        },
+        "vscode-postgres.sqlLint.indentSize": {
+            "type": "number",
+            "default": 4,
+            "description": "缩进空格数"
+        },
         "vscode-postgres.defaultConnection": {
           "type": "string",
           "default": "",
@@ -116,6 +127,12 @@
         "title": "SQL Lint",
         "category": "PostgreSQL"
       },
+        {
+            "command": "vscode-postgres.sqlLintSelection",
+            "when": "editorLangId == postgres && editorHasSelection",
+            "group": "navigation",
+            "title": "Lint Selection"
+        },
       {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
@@ -227,6 +244,15 @@
           "command": "vscode-postgres.saveResult",
           "when": "vscodePostgresResultFocus",
           "group": "navigation"
+        },
+        {
+            "command": "vscode-postgres.sqlLint",
+            "when": "editorLangId == postgres",
+            "group": "navigation",
+            "icon": {
+    "light": "resources/light/lint.svg",
+    "dark": "resources/dark/lint.svg"
+  }
         }
       ],
       "view/title": [
@@ -237,6 +263,10 @@
         }
       ],
       "commandPalette": [
+         {
+            "command": "vscode-postgres.sqlLint",
+            "when": "editorLangId == postgres"
+        },
         {
           "command": "vscode-postgres.runQuery",
           "when": "editorLangId == postgres"
