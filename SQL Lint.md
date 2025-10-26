@@ -1,4 +1,4 @@
-SQL Lint 功能使用指南
+SQL Lint 功能使用指南.
 
 📌 简介
 
