@@ -1,86 +1,257 @@
-# PostgreSQL
+SQL Lint 功能使用指南
 
-This is a query tool for PostgreSQL databases.  While there is a database explorer it is _NOT_ meant for creating/dropping databases or tables.  The explorer is a visual aid for helping to craft your queries.
+📌 简介
 
-There is a language service that should keep at most a single connection open to the database (assuming one was selected).  This facilitates query diagnostics, code completion, and function signatures.  All code completion keywords, functions, tables, and field names are pulled from the current connection to try to keep everything relevant.
+SQL Lint 是 VS Code PostgreSQL 扩展的一个功能，它可以个性化自动格式化 SQL 代码，应用最佳实践规则，并检测潜在的性能和安全问题。本指南将介绍如何使用这个功能以及它包含的各种规则。
 
-It is possible there are some queries that won't run and report problems - even if they are completely valid (`DROP DATABASE` comes to mind).
+🚀 如何使用 SQL Lint
 
-> *__Note__: PostgreSQL versions before 9.4 are not supported.*
+方法 1：通过命令面板
 
-> *__Note__: AWS RedShift is _also_ not supported - there are information schema queries needed that just won't work there*
+1. 打开一个 SQL 文件（.pgsql 或 .sql）
+2. 按 Ctrl+Shift+P（Windows/Linux）或 Cmd+Shift+P（Mac）
+3. 输入 "SQL Lint"
+4. 选择并执行命令
+5. 格式化后的 SQL 将显示在侧边的新编辑器中
 
-## Features
+方法 2：在新建查询时自动应用
 
-* Management of PostgreSQL connections
-* List Servers/Database/Functions/Tables/Columns (primary key/type)
-* Quickly select top * (with limit) of a table
-* Run Queries
-  * All queries in a pgsql file (; delimited)
-  * Selected query in pgsql file
-  * Selected query in ANY file (via context menu or command palette)
-* Individual editors can have different connections
-* Quickly change connection database by clicking the DB in the status bar
-* Syntax Highlighting
-* Connection aware code completion (keywords, functions, tables, and fields)
-* In-line error detection powered by EXPLAIN (one error per query in editor)
-* *__Basic__* function signature support (connection aware)
+1. 使用 "New Query" 命令创建新查询
+2. 输入 SQL 代码
+3. 执行 SQL Lint 命令格式化代码
+4. 格式化后的代码将替换原始内容
 
-## Usage
+⚠️ 重要提示
 
-### Managing Connections
+Lint 结果窗口是只读的，不能直接执行查询。您需要：
+1. 将格式化后的 SQL 复制到原始编辑器
+2. 在原始编辑器中使用 F5 或右键菜单执行查询
 
-You can add a PostgreSQL connection in the explorer or via the command palette command "PostgreSQL: Add Connection"
+🔧 配置选项
 
-![connection](images/add_connection.gif)
+在 VS Code 设置中（settings.json）可以配置 SQL Lint 的行为：
+{
+    "vscode-postgres.sqlLint.caseStyle": "upper",
+    "vscode-postgres.sqlLint.indentSize": 4,
+    "vscode-postgres.sqlLint.enableWarnings": true,
+    "vscode-postgres.sqlLint.autoCopyToOriginal": false
+}（还没实现）
 
-You can remove connections from the connection context menu or the command palette command "PostgreSQL: Delete Connection".
 
-![delete_connection](images/delete_connection.gif)
+或者在 package.json 中定义配置属性：
+"configuration": {
+    "properties": {
+        "vscode-postgres.sqlLint.caseStyle": {
+            "type": "string",
+            "enum": ["upper", "lower"],
+            "default": "upper",
+            "description": "SQL关键字大小写风格"
+        },
+        "vscode-postgres.sqlLint.indentSize": {
+            "type": "number",
+            "default": 4,
+            "description": "缩进空格数"
+        },
+        "vscode-postgres.sqlLint.enableWarnings": {
+            "type": "boolean",
+            "default": true,
+            "description": "启用潜在问题检测"
+        },
+        "vscode-postgres.sqlLint.autoCopyToOriginal": {
+            "type": "boolean",
+            "default": false,
+            "description": "自动将Lint结果复制回原编辑器"
+        }
+    }
+}
 
-Each item in the explorer has it's own context menu, and you can start a new query from _any_ level (or the command palette "PostgreSQL: New Query").
 
-The "Refresh Items" option reloads the sub-nodes for that item, useful if there were structural changes to the database and you want the explorer to reflect them.
+📋 已实现的 Lint 规则
 
-Tables have the extra option to "Select Top 1000" or "Select Top...". They both open a new query with a "SELECT *" query started and run it.  The latter option will prompt you for the quantity first.
+1. 关键字大小写统一
 
-### Running Queries
+• 统一 SQL 关键字的大小写（大写或小写）
 
-Each editor window can have a different database and/or connection used for its queries.  All windows start with no connection selected.
+• 支持的关键字：SELECT, FROM, WHERE, JOIN, GROUP BY 等
 
-![status](images/current_connection.png)
+2. 缩进格式化
 
-Clicking on the server ("localhost" above) or the database name will allow you to quickly change the database.  You can also initiate the change from the command palette.
+• 自动添加适当的缩进
 
-Windows with their language set to Postgres will get syntax highlighting, and when there is connection selected: code completion, signature information, and diagnostics.
+• 根据 SQL 结构调整缩进级别
 
-In Postgres language files you can run a query via F5, context menu, or command palette.  You can also run a query from any other file type as long as a connection is selected and you have the query selected - __*F5 will not work for other file types*__.
+• 可配置缩进大小（默认 4 空格）
 
-![run_queries](images/run_queries.gif)
+3. 避免 SELECT *
 
-Running queries in Postgres language files first check if anything is selected. If there is a selection, that is run as the query, otherwise all the queries in the editor are run.
+• 检测并标记 SELECT * 的使用
 
-Multiple queries are supported. If there is output from more than one query, multiple tables are shown in the results window.
+• 建议明确指定需要的列
 
-### Serializing Query Results
+4. 显式 JOIN 转换
 
-You can serialize your query results as well.
+• 将隐式 JOIN（逗号分隔）转换为显式 JOIN 语法
 
-![save_results](images/save_results.png)
+• 提高可读性和可维护性
 
-If you have more than one table of results, you will be prompted for the table you wish to serialize.
+5. 别名格式化
 
-You can choose from three formats: json, xml, and csv.  The results will be converted to the appropriate format and opened in a new editor of the selected type.
+• 统一别名格式（添加 AS 关键字）
 
-## Extension Settings
+• 示例：FROM users u → FROM users AS u
 
-This extension contributes the following settings:
+6. 分号结尾
 
-* `vscode-postgres.showExplorer`: enable/disable the database explorer.
-* `vscode-postgres.prettyPrintJSONfields`: set to `true` to enable nicely formatted JSON in the query results window.
-* `vscode-postgres.setConnectionFromExplorer`: set to `ifunset` to only set the query connection if not already set.
-* `vscode-postgres.tableColumnSortOrder`: set to `db-order` to sort columns like the database does, `alpha` to sort alphabetically, and `reverse-alpha` for descending alphabetically.
-* `vscode-postgres.intervalFormat`: set to `iso_8601` to format intervals according to the ISO 8601 standard, `humanize` to format as easy to read text, and `succinct` to format like a countdown clock.
-* `vscode-postgres.virtualFolders`: set to array of virtual folders to be displayed under schema. Supported values for virtual folders are `functions`. Set to `null` or empty array `[]` to disable virtual folders.
-* `vscode-postgres.defaultConnection`: set the default connection (by name) that should be used for any file.
-* `vscode-postgres.defaultDatabase`: set the default database on the default connection that should be used for any file (must exist on server).
+• 确保 SQL 语句以分号结尾
+
+• 符合 SQL 标准
+
+7. 潜在问题检测
+
+• N+1 查询警告：检测可能的 N+1 查询模式
+
+• 索引提示：建议为 WHERE/JOIN 条件添加索引
+
+• SQL 注入警告：检测直接拼接字符串值
+
+• 性能提示：标记可能影响性能的模式
+
+8. 函数调用格式化
+
+• 统一聚合函数调用格式
+
+• 示例：count(*) → COUNT(*)
+
+📝 示例代码
+
+示例 1：基本查询（Lint 前）
+
+select * from orders o, customers c 
+where o.customer_id = c.id 
+and c.country = 'USA'
+order by o.order_date desc
+
+
+示例 1：Lint 后
+
+/*
+⚠️ 警告：可能存在 N+1 查询问题，考虑使用 JOIN 优化
+🔍 提示：确保以下列有索引: o.customer_id, c.id, c.country, o.order_date
+🛡️ 警告：直接拼接字符串值，考虑使用参数化查询防止 SQL 注入
+*/
+
+SELECT /* 避免使用 SELECT *，明确指定需要的列 */ FROM orders AS o
+    JOIN customers AS c ON o.customer_id = c.id
+        AND c.country = 'USA'
+        ORDER BY o.order_date DESC;
+
+
+示例 2：聚合查询（Lint 前）
+
+select product_name, count(*) as order_count
+from order_details od
+join products p on od.product_id = p.id
+where p.category = 'Electronics'
+group by product_name
+having count(*) > 10
+
+
+示例 2：Lint 后
+
+/*
+🔍 提示：确保以下列有索引: od.product_id, p.id, p.category
+🛡️ 警告：直接拼接字符串值，考虑使用参数化查询防止 SQL 注入
+*/
+
+SELECT product_name, COUNT(*) AS order_count
+    FROM order_details AS od
+        JOIN products AS p ON od.product_id = p.id
+            WHERE p.category = 'Electronics'
+                GROUP BY product_name
+                    HAVING COUNT(*) > 10;
+
+
+示例 3：复杂查询（Lint 前）
+
+select u.name, o.order_date, p.name as product_name, od.quantity
+from users u
+inner join orders o on u.id = o.user_id
+inner join order_details od on o.id = od.order_id
+inner join products p on od.product_id = p.id
+where u.country = 'Canada' and o.status = 'completed'
+order by o.order_date desc
+
+
+示例 3：Lint 后
+
+/*
+🔍 提示：确保以下列有索引: u.id, o.user_id, o.id, od.order_id, od.product_id, p.id, u.country, o.status
+🛡️ 警告：直接拼接字符串值，考虑使用参数化查询防止 SQL 注入
+*/
+
+SELECT u.name, o.order_date, p.name AS product_name, od.quantity
+    FROM users AS u
+        INNER JOIN orders AS o ON u.id = o.user_id
+        INNER JOIN order_details AS od ON o.id = od.order_id
+        INNER JOIN products AS p ON od.product_id = p.id
+            WHERE u.country = 'Canada'
+                AND o.status = 'completed'
+                ORDER BY o.order_date DESC;
+
+
+示例 4：CTE 和窗口函数（Lint 前）
+
+with monthly_sales as (
+    select date_trunc('month', order_date) as month,
+    product_id,
+    sum(quantity) as total_quantity
+    from orders
+    group by month, product_id
+)
+select month, product_id, total_quantity,
+rank() over (partition by month order by total_quantity desc) as sales_rank
+from monthly_sales
+where total_quantity > 100
+
+
+示例 4：Lint 后
+
+/*
+🔍 提示：确保以下列有索引: order_date, product_id, quantity
+🛡️ 警告：直接拼接字符串值，考虑使用参数化查询防止 SQL 注入
+*/
+
+WITH monthly_sales AS (
+    SELECT DATE_TRUNC('month', order_date) AS month,
+        product_id,
+        SUM(quantity) AS total_quantity
+        FROM orders
+            GROUP BY month, product_id
+)
+SELECT month, product_id, total_quantity,
+    RANK() OVER (PARTITION BY month ORDER BY total_quantity DESC) AS sales_rank
+    FROM monthly_sales
+        WHERE total_quantity > 100;
+
+
+💡 使用建议
+
+1. 开发过程中使用：在编写 SQL 时定期运行 Lint，确保代码质量
+2. 代码审查前：在提交代码前运行 Lint，修复潜在问题
+3. 性能优化：关注 Lint 提供的索引建议，优化查询性能
+4. 安全加固：注意 SQL 注入警告，使用参数化查询
+5. 结果处理：记得将 Lint 结果复制回原始编辑器才能执行查询
+
+🛠️ 故障排除
+
+如果 SQL Lint 不工作：
+1. 确保文件语言模式设置为 "Postgres"
+2. 检查 VS Code 输出面板是否有错误信息
+3. 尝试重新加载 VS Code 窗口
+4. 确保扩展已更新到最新版本
+5. 记住：Lint 结果窗口不能直接执行查询，需要复制回原编辑器
+
+📞 支持与反馈
+
+
+SQL Lint 功能将持续更新，添加更多规则和改进！
