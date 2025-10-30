@@ -16,16 +16,20 @@ export interface SQLHistoryEntry {
 
 export class SQLHistory {
     private static instance: SQLHistory;
+    // 定义长度限制常量
+    private static readonly MAX_QUERY_LENGTH = 65535;      // 64KB - 1 for query text
+    private static readonly MAX_RESULT_LENGTH = 262144;    // 256KB for result data in JSON format
+    
     private readonly CREATE_TABLE_SQL: string = `
         CREATE TABLE IF NOT EXISTS _vscode_sql_history (
             id SERIAL PRIMARY KEY,
-            query_text TEXT NOT NULL,
+            query_text VARCHAR(${SQLHistory.MAX_QUERY_LENGTH}) NOT NULL,
             execution_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             duration_ms INTEGER,
             success BOOLEAN NOT NULL,
             database_name TEXT NOT NULL,
             server_host TEXT NOT NULL,
-            result_data JSONB
+            result_data VARCHAR(${SQLHistory.MAX_RESULT_LENGTH})
         );
     `;
 
@@ -55,7 +59,7 @@ export class SQLHistory {
             // 如果列不存在，就添加它
             if (result.rows.length === 0) {
                 console.log('Adding result_data column to history table...');
-                const addColumnQuery = `ALTER TABLE _vscode_sql_history ADD COLUMN result_data JSONB;`;
+                const addColumnQuery = `ALTER TABLE _vscode_sql_history ADD COLUMN result_data VARCHAR(${SQLHistory.MAX_RESULT_LENGTH});`;
                 await connection.query(addColumnQuery);
                 console.log('result_data column added.');
             }
@@ -68,6 +72,70 @@ export class SQLHistory {
         }
     }
 
+    /**
+     * 截断字符串到指定长度，并在超长时记录警告
+     */
+    private truncateString(value: string, maxLength: number, fieldName: string): string {
+        if (!value) return value;
+        if (value.length > maxLength) {
+            console.warn(`${fieldName} exceeds maximum length of ${maxLength} characters. Original length: ${value.length}. Data will be truncated.`);
+            return value.substring(0, maxLength);
+        }
+        return value;
+    }
+
+    /**
+     * 截断结果数据（JSON格式），确保不超过最大长度
+     */
+    private truncateResultData(data: any): any {
+        if (!data) return data;
+        
+        try {
+            const jsonStr = JSON.stringify(data);
+            if (jsonStr.length > SQLHistory.MAX_RESULT_LENGTH) {
+                console.warn(`Result data exceeds maximum length of ${SQLHistory.MAX_RESULT_LENGTH} characters. Original length: ${jsonStr.length}. Data will be truncated.`);
+                
+                // 截断行数以减小数据大小
+                if (data.rows && Array.isArray(data.rows)) {
+                    const originalRowCount = data.rows.length;
+                    // 二分法逐步减少行数直到数据符合限制
+                    let rowCount = Math.floor(originalRowCount / 2);
+                    while (rowCount > 0) {
+                        const truncatedData = {
+                            ...data,
+                            rows: data.rows.slice(0, rowCount),
+                            rowCount: rowCount,
+                            message: `Result truncated from ${originalRowCount} rows to ${rowCount} rows due to size limit`
+                        };
+                        const truncatedJsonStr = JSON.stringify(truncatedData);
+                        if (truncatedJsonStr.length <= SQLHistory.MAX_RESULT_LENGTH) {
+                            return truncatedData;
+                        }
+                        rowCount = Math.floor(rowCount / 2);
+                    }
+                    
+                    // 如果仍然超大，返回元数据只
+                    return {
+                        rowCount: originalRowCount,
+                        command: data.command,
+                        message: 'Result data too large, only metadata stored'
+                    };
+                }
+                
+                // 如果不是行数据，直接截断JSON字符串
+                return JSON.parse(jsonStr.substring(0, SQLHistory.MAX_RESULT_LENGTH));
+            }
+        } catch (err) {
+            console.warn('Error processing result data:', err);
+            // 返回安全的元数据
+            return {
+                message: 'Error processing result data'
+            };
+        }
+        
+        return data;
+    }
+
     public async addEntry(entry: SQLHistoryEntry, connectionOptions: IConnection): Promise<void> {
         let connection: PgClient | null = null;
         try {
@@ -78,6 +146,10 @@ export class SQLHistory {
             // 确保历史表存在
             await this.ensureHistoryTable(connection);
 
+            // 截断长度
+            const truncatedQuery = this.truncateString(entry.query, SQLHistory.MAX_QUERY_LENGTH, 'Query text');
+            const truncatedResult = this.truncateResultData(entry.result);
+
             // 插入历史记录
             const insertSql = `
                 INSERT INTO _vscode_sql_history 
@@ -87,12 +159,12 @@ export class SQLHistory {
             `;
             
             const result = await connection.query(insertSql, [
-                entry.query,
+                truncatedQuery,
                 entry.database,
                 entry.server,
                 entry.success,
                 entry.executionTime || null,
-                entry.result ? JSON.stringify(entry.result) : null
+                truncatedResult ? JSON.stringify(truncatedResult) : null
             ]);
 
             console.log('SQL history entry saved with ID:', result.rows[0]?.id);

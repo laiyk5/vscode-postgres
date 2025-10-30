@@ -117,6 +117,11 @@
         "category": "PostgreSQL"
       },
       {
+        "command": "vscode-postgres.sqlHistoryVisualization",
+        "title": "View History Visualization",
+        "category": "PostgreSQL"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -445,7 +450,7 @@
   "scripts": {
     "vscode:prepublish": "npm run build-preview && npm run compile",
     "compile": "tsc -p ./",
-    "watch": "npm run build-preview-dev && tsc -watch -p ./",
+    "watch": "NODE_OPTIONS=--openssl-legacy-provider npm run build-preview-dev && tsc -watch -p ./",
     "build-preview-dev": "npx webpack --mode development",
     "build-preview": "npx webpack --mode production"
   },

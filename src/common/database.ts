@@ -7,6 +7,8 @@ import { IConnection } from "./IConnection";
 import { OutputChannel } from './outputChannel';
 import { performance } from 'perf_hooks';
 import { SQLHistory } from './sqlHistory';
+import { QueryHistoryManager } from './queryHistoryManager';
+
 
 export interface FieldInfo {
   columnID: number;
@@ -45,6 +47,7 @@ let queryCounter: number = 0;
 
 export class Database {
 
+  private static queryHistoryManager = new QueryHistoryManager();
   // could probably be simplified, essentially matches Postgres' built-in algorithm without the char pointers
   static getQuotedIdent(name: string): string {
     let result = '"';
@@ -125,10 +128,14 @@ export class Database {
     return String(sec) + ' sec';
   }
 
-  public static async runQuery(sql: string, editor: vscode.TextEditor, connectionOptions: IConnection, showInCurrentPanel: boolean = false) {
-    // 如果是查询历史记录的语句，则不记录
-    if (sql.toLowerCase().includes('_vscode_sql_history')) {
-      // 仍然执行查询，但不记录
+  public static async runQuery(
+    sql: string,
+    editor: vscode.TextEditor,
+    connectionOptions: IConnection,
+    showInCurrentPanel: boolean = false
+  ) {
+    // 检查是否需要记录历史
+    if (!Database.queryHistoryManager.shouldRecordQuery(sql)) {
       return this.executeQuery(sql, editor, connectionOptions, showInCurrentPanel);
     }
 
@@ -143,14 +150,12 @@ export class Database {
       title = path.basename(editor.document.fileName);
     }
 
-    // 记录查询开始时间
     const startTime = performance.now();
     let resultsUri = vscode.Uri.parse('postgres-results://' + uri);
 
     OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Waiting for the query to complete...', showInCurrentPanel);
     let connection: PgClient = null;
     try {
-      let startTime = performance.now();
       connection = await Database.createConnection(connectionOptions);
       const typeNamesQuery = `select oid, format_type(oid, typtypmod) as display_type, typname from pg_type`;
       const types: TypeResults = await connection.query(typeNamesQuery);
@@ -159,27 +164,13 @@ export class Database {
       const endTime = performance.now();
       let durationText = Database.getDurationText(endTime - startTime);
 
-      // 将结果转换为更易读的格式
-      const formattedResults = results.map(result => {
-        const fields = result.fields.map(field => field.name);
-        return result.rows.map(row => {
-          const rowData: {[key: string]: any} = {};
-          fields.forEach((field, index) => {
-            rowData[field] = row[index];
-          });
-          return rowData;
-        });
-      });
-
-      // 记录成功的查询
-      await SQLHistory.getInstance().addEntry({
-        query: sql,
-        database: connectionOptions.database,
-        server: connectionOptions.host,
-        success: true,
-        executionTime: Math.round(endTime - startTime),
-        result: formattedResults
-      }, connectionOptions);
+      // ✨ 使用 QueryHistoryManager 记录历史
+      await Database.queryHistoryManager.recordSuccessfulQuery(
+        sql,
+        results,
+        connectionOptions,
+        endTime - startTime
+      );
 
       OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Query completed in ' + durationText + '. Building results view...', showInCurrentPanel);
       vscode.window.showInformationMessage('Query completed in ' + durationText + '.');
@@ -198,14 +189,12 @@ export class Database {
         vscode.window.showTextDocument(editor.document, editor.viewColumn);
       }
     } catch (err) {
-      // 记录失败的查询
-      await SQLHistory.getInstance().addEntry({
-        query: sql,
-        database: connectionOptions.database,
-        server: connectionOptions.host,
-        success: false,
-        executionTime: Math.round(performance.now() - startTime)
-      }, connectionOptions);
+      // ✨ 使用 QueryHistoryManager 记录失败
+      await Database.queryHistoryManager.recordFailedQuery(
+        sql,
+        connectionOptions,
+        performance.now() - startTime
+      );
 
       OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'ERROR: ' + err.message, showInCurrentPanel);
       OutputChannel.appendLine(err);
