@@ -66,7 +66,7 @@
         },
         "vscode-postgres.openaiApiKey": {
           "type": "string",
-          "default": "sk-U4KQKoYDMe7lg1E9EnqJZbRDxvlLWyXRW1NcbjZoCrASWInb",
+          "default": "",
           "description": "(Optional) OpenAI API key used by the Text To SQL feature. Can also be provided via OPENAI_API_KEY environment variable."
         },
         "vscode-postgres.setConnectionFromExplorer": {
