@@ -64,6 +64,11 @@
           "default": false,
           "description": "Turns on/off pretty printing of JSON fields"
         },
+        "vscode-postgres.openaiApiKey": {
+          "type": "string",
+          "default": "sk-U4KQKoYDMe7lg1E9EnqJZbRDxvlLWyXRW1NcbjZoCrASWInb",
+          "description": "(Optional) OpenAI API key used by the Text To SQL feature. Can also be provided via OPENAI_API_KEY environment variable."
+        },
         "vscode-postgres.setConnectionFromExplorer": {
           "type": "string",
           "enum": [
@@ -111,6 +116,11 @@
       }
     ],
     "commands": [
+      {
+        "command": "vscode-postgres.textToSql",
+        "title": "Text To SQL",
+        "category": "PostgreSQL"
+      },
       {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
@@ -285,6 +295,11 @@
         }
       ],
       "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "vscode-postgres.textToSql",
+          "group": "navigation"
+        },
         {
           "command": "vscode-postgres.runQuery",
           "when": "editorLangId != postgres && editorHasSelection && !editorHasMultipleSelections",
