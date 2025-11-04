@@ -213,6 +213,59 @@
           "light": "./resources/light/save.svg",
           "dark": "./resources/dark/save.svg"
         }
+      },
+      {
+        "command": "vscode-postgres.createTable",
+        "title": "Create Table",
+        "category": "PostgreSQL",
+        "icon": {
+          "light": "resources/light/table.svg",
+          "dark": "resources/dark/table.svg"
+        }
+      },
+      {
+        "command": "vscode-postgres.dropTable",
+        "title": "Drop Table",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.addColumn",
+        "title": "Add Column",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.alterColumn",
+        "title": "Alter Column",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.dropColumn",
+        "title": "Drop Column",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.createIndex",
+        "title": "Create Index",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.dropIndex",
+        "title": "Drop Index",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.alterIndex",
+        "title": "Alter Index",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.generateERDiagram",
+        "title": "Generate ER Diagram",
+        "category": "PostgreSQL",
+        "icon": {
+          "light": "resources/light/diagram.svg",
+          "dark": "resources/dark/diagram.svg"
+        }
       }
     ],
     "menus": {
@@ -281,6 +334,38 @@
         },
         {
           "command": "vscode-postgres.saveResult",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.createTable",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.dropTable",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.addColumn",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.alterColumn",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.dropColumn",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.createIndex",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.dropIndex",
+          "when": "config.vscode-postgres.never"
+        },
+        {
+          "command": "vscode-postgres.alterIndex",
           "when": "config.vscode-postgres.never"
         }
       ],
@@ -363,6 +448,16 @@
           "group": "postgres@1"
         },
         {
+          "command": "vscode-postgres.alterColumn",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.column",
+          "group": "postgres@2"
+        },
+        {
+          "command": "vscode-postgres.dropColumn",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.column",
+          "group": "postgres@2"
+        },
+        {
           "command": "vscode-postgres.copyFunctionName",
           "when": "view == postgres && viewItem == vscode-postgres.tree.function",
           "group": "postgres@1"
@@ -373,8 +468,48 @@
           "group": "postgres@1"
         },
         {
+          "command": "vscode-postgres.createTable",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.schema",
+          "group": "postgres@1"
+        },
+        {
           "command": "vscode-postgres.copyTableName",
           "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@1"
+        },
+        {
+          "command": "vscode-postgres.dropTable",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@2"
+        },
+        {
+          "command": "vscode-postgres.addColumn",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@1"
+        },
+        {
+          "command": "vscode-postgres.createIndex",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@1"
+        },
+        {
+          "command": "vscode-postgres.dropIndex",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@2"
+        },
+        {
+          "command": "vscode-postgres.alterIndex",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.table",
+          "group": "postgres@2"
+        },
+        {
+          "command": "vscode-postgres.generateERDiagram",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.database",
+          "group": "postgres@1"
+        },
+        {
+          "command": "vscode-postgres.generateERDiagram",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.schema",
           "group": "postgres@1"
         },
         {

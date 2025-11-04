@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid ER 图测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js"></script>
+</head>
+<body>
+    <h1>ER 图语法测试</h1>
+    
+    <h2>测试 1: 简单表结构</h2>
+    <div class="mermaid">
+erDiagram
+    users {
+        integer id PK
+        varchar username "NOT NULL"
+        varchar email "NOT NULL"
+        timestamp created_at
+    }
+    
+    orders {
+        integer id PK
+        integer user_id "NOT NULL"
+        decimal amount "NOT NULL"
+        timestamp created_at
+    }
+    
+    users ||--o{ orders : has
+    </div>
+
+    <h2>测试 2: 多模式结构</h2>
+    <div class="mermaid">
+erDiagram
+    public_users {
+        integer id PK
+        varchar name "NOT NULL"
+    }
+    
+    sales_orders {
+        integer id PK
+        integer customer_id "NOT NULL"
+        decimal total
+    }
+    
+    public_users ||--o{ sales_orders : has
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'neutral',
+            securityLevel: 'loose',
+            er: {
+                diagramPadding: 20,
+                layoutDirection: 'TB',
+                minEntityWidth: 100,
+                minEntityHeight: 75,
+                entityPadding: 15,
+                stroke: '#333333',
+                fill: '#ECECFF',
+                fontSize: 12
+            }
+        });
+    </script>
+</body>
+</html>
