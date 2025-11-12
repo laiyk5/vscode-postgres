@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { IConnection } from "../common/IConnection";
 import { INode } from "./INode";
-import { TreeItem, TreeItemCollapsibleState } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import { Database } from "../common/database";
 import { TableNode } from "./tableNode";
 import { InfoNode } from "./infoNode";
@@ -23,8 +23,8 @@ export class SchemaNode implements INode {
         arguments: [ this.connection ]
       },
       iconPath: {
-        light: path.join(__dirname, '../../resources/light/schema.svg'),
-        dark: path.join(__dirname, '../../resources/dark/schema.svg')
+        light: Uri.file(path.join(__dirname, '../../resources/light/schema.svg')),
+        dark: Uri.file(path.join(__dirname, '../../resources/dark/schema.svg'))
       }
     };
   }

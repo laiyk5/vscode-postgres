@@ -12,7 +12,7 @@ import { ConfigFS } from './common/configFileSystem';
 import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
-
+import { updateMcpConnection } from './mcp/updateMcpConnection';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -52,12 +52,31 @@ export async function activate(context: vscode.ExtensionContext) {
   const configFS = new ConfigFS();
   context.subscriptions.push(vscode.workspace.registerFileSystemProvider('postgres-config', configFS, {isCaseSensitive: true}));
 
+  configFS.onDidChangeFile(async (e) => {
+    for (const change of e) {
+      let connFile = change.uri.path.substr(1);
+      let fileExt = path.posix.extname(connFile);
+      if (fileExt !== '.json') {
+        continue;
+      }
+      let connectionKey = path.posix.basename(connFile, '.json');
+      await updateMcpConnection(connectionKey);
+    }
+  })
+
   // EditorState.connection = null;
   // if (vscode.window && vscode.window.activeTextEditor) {
   //   let doc = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.document : null;
   //   await EditorState.setNonActiveConnection(doc, null);
   //   EditorState.getInstance().onDidChangeActiveTextEditor(vscode.window.activeTextEditor);
   // }
+
+  // create MCP servers for existing connections
+  console.log('Registering MCP servers for existing connections');
+  const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey, {});
+  for (const connectionKey of Object.keys(connections)) {
+    await updateMcpConnection(connectionKey);
+  }
 }
 
 // this method is called when your extension is deactivated

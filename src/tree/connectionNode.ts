@@ -21,8 +21,8 @@ export class ConnectionNode implements INode {
         arguments: [ this.connection ]
       },
       iconPath: {
-        light: path.join(__dirname, '../../resources/light/server.svg'),
-        dark: path.join(__dirname, '../../resources/dark/server.svg')
+        light: vscode.Uri.file(path.join(__dirname, '../../resources/light/server.svg')),
+        dark: vscode.Uri.file(path.join(__dirname, '../../resources/dark/server.svg'))
       }
     };
   }

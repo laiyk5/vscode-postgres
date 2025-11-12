@@ -2,7 +2,7 @@ import * as path from 'path';
 import { INode } from "./INode";
 import { IConnection } from "../common/IConnection";
 import { IColumn } from "./IColumn";
-import { TreeItem, TreeItemCollapsibleState } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 
 export class ColumnNode implements INode {
   
@@ -27,8 +27,8 @@ export class ColumnNode implements INode {
       collapsibleState: TreeItemCollapsibleState.None,
       contextValue: 'vscode-postgres.tree.column',
       iconPath: {
-        light: path.join(__dirname, `../../resources/light/${icon}.svg`),
-        dark: path.join(__dirname, `../../resources/dark/${icon}.svg`)
+        light: Uri.file(path.join(__dirname, `../../resources/light/${icon}.svg`)),
+        dark: Uri.file(path.join(__dirname, `../../resources/dark/${icon}.svg`))
       }
     };
   }

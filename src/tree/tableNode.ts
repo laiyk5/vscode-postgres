@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { INode } from "./INode";
 import { IConnection } from "../common/IConnection";
-import { TreeItem, TreeItemCollapsibleState } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 import { Database } from '../common/database';
 import { InfoNode } from './infoNode';
 import { ColumnNode } from './columnNode';
@@ -33,8 +33,8 @@ export class TableNode implements INode {
       collapsibleState: TreeItemCollapsibleState.Collapsed,
       contextValue: 'vscode-postgres.tree.table',
       iconPath: {
-        light: path.join(__dirname, `../../resources/light/${iconName}.svg`),
-        dark: path.join(__dirname, `../../resources/dark/${iconName}.svg`)
+        light: Uri.file(path.join(__dirname, `../../resources/light/${iconName}.svg`)),
+        dark: Uri.file(path.join(__dirname, `../../resources/dark/${iconName}.svg`))
       }
     };
   }

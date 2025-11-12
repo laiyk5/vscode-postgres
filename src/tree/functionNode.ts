@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { IConnection } from "../common/IConnection";
 import { INode } from "./INode";
-import { TreeItem, TreeItemCollapsibleState } from "vscode";
+import { TreeItem, TreeItemCollapsibleState, Uri } from "vscode";
 
 export class FunctionNode implements INode {
   constructor(public readonly connection: IConnection
@@ -24,8 +24,8 @@ export class FunctionNode implements INode {
       collapsibleState: TreeItemCollapsibleState.None,
       contextValue: 'vscode-postgres.tree.function',
       iconPath: {
-        light: path.join(__dirname, `../../resources/light/function.svg`),
-        dark: path.join(__dirname, `../../resources/dark/function.svg`)
+        light: Uri.file(path.join(__dirname, `../../resources/light/function.svg`)),
+        dark: Uri.file(path.join(__dirname, `../../resources/dark/function.svg`))
       }
     };
   }

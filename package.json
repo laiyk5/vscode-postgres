@@ -2,7 +2,7 @@
   "name": "vscode-postgres",
   "displayName": "PostgreSQL",
   "description": "PostgreSQL Management Tool",
-  "version": "1.4.3",
+  "version": "1.4.2",
   "publisher": "ckolkman",
   "license": "MIT",
   "repository": {
@@ -10,7 +10,7 @@
     "url": "https://github.com/Borvik/vscode-postgres.git"
   },
   "engines": {
-    "vscode": "^1.63.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
@@ -20,6 +20,12 @@
   ],
   "main": "./out/extension",
   "contributes": {
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "vscode-postgres.mcpservers",
+        "label": "PostgreSQL"
+      }
+    ],
     "languages": [
       {
         "id": "postgres",
@@ -449,13 +455,15 @@
     "@types/node": "^12.12.68",
     "@types/pg": "^7.14.4",
     "@types/uuid": "^8.3.0",
-    "@types/vscode": "^1.57.0",
+    "@types/vscode": "^1.85.0",
     "ts-loader": "^8.0.4",
     "typescript": "^4.3.2",
     "webpack": "^5.38.1",
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
+    "@executeautomation/database-server": "^1.1.0",
+    "@modelcontextprotocol/sdk": "^1.21.1",
     "csv-stringify": "^5.6.2",
     "easyxml": "^2.0.1",
     "pg": "^8.6.0",
