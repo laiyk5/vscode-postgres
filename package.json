@@ -10,7 +10,7 @@
     "url": "https://github.com/Borvik/vscode-postgres.git"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.105.0"
   },
   "categories": [
     "Other"
@@ -451,26 +451,30 @@
     "build-preview": "npx webpack --mode production"
   },
   "devDependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@types/express": "^5.0.5",
     "@types/mocha": "^2.2.42",
-    "@types/node": "^12.12.68",
+    "@types/node": "^12.20.55",
     "@types/pg": "^7.14.4",
     "@types/uuid": "^8.3.0",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.105.0",
     "ts-loader": "^8.0.4",
-    "typescript": "^4.3.2",
+    "typescript": "^5.9.3",
     "webpack": "^5.38.1",
     "webpack-cli": "^4.7.2"
   },
   "dependencies": {
-    "@executeautomation/database-server": "^1.1.0",
     "@modelcontextprotocol/sdk": "^1.21.1",
     "csv-stringify": "^5.6.2",
     "easyxml": "^2.0.1",
+    "express": "^5.1.0",
     "pg": "^8.6.0",
+    "postgres": "^3.4.7",
     "postgres-array": "^3.0.2",
     "uuid": "^8.3.2",
     "vscode-languageclient": "^7.0.0",
     "vscode-languageserver": "^7.0.0",
-    "vscode-languageserver-textdocument": "^1.0.1"
+    "vscode-languageserver-textdocument": "^1.0.1",
+    "zod": "^3.25.76"
   }
 }
