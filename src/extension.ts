@@ -13,6 +13,7 @@ import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
 import { updateMcpConnection } from './mcp/updateMcpConnection';
+import { startMcpServer } from './mcp/server';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -50,19 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
   });
 
   const configFS = new ConfigFS();
-  context.subscriptions.push(vscode.workspace.registerFileSystemProvider('postgres-config', configFS, {isCaseSensitive: true}));
-
-  configFS.onDidChangeFile(async (e) => {
-    for (const change of e) {
-      let connFile = change.uri.path.substr(1);
-      let fileExt = path.posix.extname(connFile);
-      if (fileExt !== '.json') {
-        continue;
-      }
-      let connectionKey = path.posix.basename(connFile, '.json');
-      await updateMcpConnection(connectionKey);
-    }
-  })
+  context.subscriptions.push(vscode.workspace.registerFileSystemProvider('postgres-config', configFS, { isCaseSensitive: true }));
 
   // EditorState.connection = null;
   // if (vscode.window && vscode.window.activeTextEditor) {
@@ -71,11 +60,45 @@ export async function activate(context: vscode.ExtensionContext) {
   //   EditorState.getInstance().onDidChangeActiveTextEditor(vscode.window.activeTextEditor);
   // }
 
-  // create MCP servers for existing connections
-  console.log('Registering MCP servers for existing connections');
-  const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey, {});
-  for (const connectionKey of Object.keys(connections)) {
-    await updateMcpConnection(connectionKey);
+  // spawn a new process and start a MCP server
+  try {
+    const port = startMcpServer();
+    Global.McpServerUri = vscode.Uri.parse(`http://localhost:${port}/mcp`);
+    vscode.window.showInformationMessage('MCP server for VS Code PostgreSQL extension started successfully.');
+  } catch (err) {
+    console.error('MCP server start error:', err);
+    vscode.window.showErrorMessage('Failed to start MCP server for VS Code PostgreSQL extension. Please check the output channel for details.');
+  }
+
+  if (Global.McpServerUri) {
+    const mcpServerHandler = vscode.lm.registerMcpServerDefinitionProvider(
+      "vscode-postgres.mcpservers",
+      {
+        provideMcpServerDefinitions: async (token) => {
+          return [
+            new vscode.McpHttpServerDefinition(
+              "vscode-postgres-mcpserver",
+              Global.McpServerUri,
+            )
+          ]
+        },
+        resolveMcpServerDefinition: async (definition: any) => {
+          return definition;
+        }
+      }
+    )
+    context.subscriptions.push(mcpServerHandler);
+
+    // if there's any connection, update the MCP server connection to select the first one
+    try {
+      const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
+      if (connections) {
+        const firstConnectionKey = Object.keys(connections)[0];
+        await updateMcpConnection(firstConnectionKey);
+      }
+    } catch (err) {
+      console.error('MCP server registration error:', err);
+    }
   }
 }
 

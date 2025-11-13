@@ -5,8 +5,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import * as express from 'express';
 import * as postgres from 'postgres'
 import { z } from 'zod';
-
-export class Global {
+class Global {
     public static sql?: postgres.Sql = undefined;
     public static mcpServer?: McpServer = undefined;
     public static app?: express.Express = undefined;
@@ -200,15 +199,19 @@ app.post('/set-connection', async (req, res) => {
     }
 });
 
-const port = parseInt(process.env.MCP_SERVER_PORT || '4000');
-app.listen(port, () => {
-    console.info(`Demo MCP Server running on http://localhost:${port}/mcp`);
-    console.info(`Set connection on http://localhost:${port}/set-connection`);
-    console.info(`MCP server is listening on port ${port}`);
-}).on('error', (err) => {
-    console.error('Server error:', err);
-    process.exit(1);
-});
+export function startMcpServer(): number {
+    // Start the server
+    const port = parseInt(process.env.MCP_SERVER_PORT || '4000');
+    app.listen(port, () => {
+        console.info(`Demo MCP Server running on http://localhost:${port}/mcp`);
+        console.info(`Set connection on http://localhost:${port}/set-connection`);
+        console.info(`MCP server is listening on port ${port}`);
+    }).on('error', (err) => {
+        console.error('Server error:', err);
+        process.exit(1);
+    });
+    return port;
+}
 
 // Handle shutdown gracefully
 process.on('SIGINT', async () => {

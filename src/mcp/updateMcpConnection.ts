@@ -18,7 +18,7 @@ import { Constants } from "../common/constants";
 async function updateMcpConnection(connectionKey: string) {
     const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
     const McpServerStateKey = Constants.GlobalStateKey + '.mcpservers';
-    const servers = Global.McpServers;
+    const McpServerUri = Global.McpServerUri;
 
     // get password and other details
     if (!connections || !connections.hasOwnProperty(connectionKey)) {
@@ -31,56 +31,36 @@ async function updateMcpConnection(connectionKey: string) {
         connection.password = '';
     }
 
-    // first remove existing server definition if any
-    console.log(`Registering/Updating server for connectionKey: ${connectionKey}`);
-    if (servers.hasOwnProperty(connectionKey)) {
-        console.log(`Disposing server for connectionKey: ${typeof servers[connectionKey]} ${servers[connectionKey]}`);
-        // dispose the server if present
-        servers[connectionKey].dispose();
-        delete servers[connectionKey];
+    // construct the schema://authority/set-connection endpoint
+    if (!McpServerUri) {
+        throw new Error("MCP server URI is not defined.");
     }
+    const setConnectionUri = McpServerUri.with({ path: '/set-connection' });
 
-    // register/update MCP server definition
-    let disposable = vscode.lm.registerMcpServerDefinitionProvider
-    ('vscode-postgres.mcpservers', {
-        provideMcpServerDefinitions: async (token) => {
-            let servers: vscode.McpStdioServerDefinition[] = [];
-            servers.push(new vscode.McpStdioServerDefinition(
-                "vscode-postgres-" + connection.label,
-                "npx",
-                [
-                    "-y",
-                    "@executeautomation/database-server",
-                    "--postgresql",
-                    "--host", connection.host,
-                    "--database", connection.database ? connection.database : "postgres",
-                    "--user", connection.user,
-                    connection.password ? "--password" : "",
-                    connection.password ? connection.password : "",
-                    "--port", connection.port ? connection.port.toString() : "5432",
-                ]
-            ));
-            return servers;
-        },
-        resolveMcpServerDefinition: async (definition: any) => {
-            return definition;
+    console.debug(`The setConnectionUri is ${setConnectionUri.toString()}`);
+    // send HTTP POST to set the connection
+    try {
+        const response = await fetch(setConnectionUri.toString(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                host: connection.host,
+                port: connection.port,
+                database: connection.database,
+                user: connection.user,
+                password: connection.password,
+                ssl: !!connection.ssl
+            })
+        });
+        if (!response.ok) {
+            console.error(`Failed to set MCP connection: ${await response.json().then(data => JSON.stringify(data))}`);
+            throw new Error(`Failed to set MCP connection: ${await response.json().then(data => data.message)}`);
         }
-    });
-    Global.context.subscriptions.push(disposable);
-    servers[connectionKey] = disposable;
-    await Global.context.globalState.update(McpServerStateKey, servers);
-}
-
-async function deleteMcpConnection(connectionKey: string) {
-    const McpServerStateKey = Constants.GlobalStateKey + '.mcpservers';
-    const servers = Global.context.globalState.get<{ [key: string]: vscode.Disposable }>(McpServerStateKey, {});
-
-    // remove existing server definition if any
-    if (servers.hasOwnProperty(connectionKey)) {
-        servers[connectionKey].dispose();
-        delete servers[connectionKey];
-        await Global.context.globalState.update(McpServerStateKey, servers);
+    } catch (error) {
+        throw new Error(`Error setting MCP connection: \n\t${error.message}`);
     }
 }
 
-export { updateMcpConnection, deleteMcpConnection };
+export { updateMcpConnection };
