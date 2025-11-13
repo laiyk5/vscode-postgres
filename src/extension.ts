@@ -12,13 +12,13 @@ import { ConfigFS } from './common/configFileSystem';
 import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
-import { updateMcpConnection } from './mcp/updateMcpConnection';
+import { updateMcpConnection, getConnection } from './mcp/updateMcpConnection';
 import { startMcpServer } from './mcp/server';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-  
+
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log(`Congratulations, your extension "${context.extension.id}" is now active!`);
@@ -36,6 +36,13 @@ export async function activate(context: vscode.ExtensionContext) {
       let className = baseName + 'Command';
 
       let commandClass = require(`./commands/${baseName}`);
+
+      // console.debug(`${commandClass.hasOwnProperty(className) ? 'Found' : 'Did not find'} command class ${className} in ./commands/${baseName}`);
+      // console.debug(`${className} has type ${typeof commandClass[className]}`);
+
+      console.debug(`Loading command: ${className}`);
+      console.warn(`The type of require(\`./commands/${baseName}\`)[${className}] is ${typeof commandClass[className]}`);
+
       new commandClass[className](context);
     }
   }
@@ -94,7 +101,8 @@ export async function activate(context: vscode.ExtensionContext) {
       const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
       if (connections) {
         const firstConnectionKey = Object.keys(connections)[0];
-        await updateMcpConnection(firstConnectionKey);
+        const firstConnection = await getConnection(firstConnectionKey);
+        await updateMcpConnection(firstConnection);
       }
     } catch (err) {
       console.error('MCP server registration error:', err);

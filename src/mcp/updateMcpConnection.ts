@@ -15,21 +15,20 @@ import { Constants } from "../common/constants";
 //     return `postgresql://${userPart}${hostPart}${portPart}${databasePart}`;
 // }
 
-async function updateMcpConnection(connectionKey: string) {
-    const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
-    const McpServerStateKey = Constants.GlobalStateKey + '.mcpservers';
-    const McpServerUri = Global.McpServerUri;
-
-    // get password and other details
+export async function getConnection(connectionKey: string): Promise<IConnection> {
+    const connections = Global.context.globalState.get<{[key: string]: IConnection}>(Constants.GlobalStateKey);
     if (!connections || !connections.hasOwnProperty(connectionKey)) {
-        return;
+        throw new Error(`Connection with key ${connectionKey} not found.`);
     }
-    const connection = connections[connectionKey];
+    let connection: IConnection = Object.assign({}, connections[connectionKey]);
     if (connection.hasPassword || !connection.hasOwnProperty('hasPassword')) {
         connection.password = await Global.context.secrets.get(connectionKey);
-    } else {
-        connection.password = '';
     }
+    return connection;
+}
+
+export async function updateMcpConnection(connection: IConnection) {
+    const McpServerUri = Global.McpServerUri;
 
     // construct the schema://authority/set-connection endpoint
     if (!McpServerUri) {
@@ -62,5 +61,3 @@ async function updateMcpConnection(connectionKey: string) {
         throw new Error(`Error setting MCP connection: \n\t${error.message}`);
     }
 }
-
-export { updateMcpConnection };

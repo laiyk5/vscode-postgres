@@ -219,6 +219,12 @@
           "light": "./resources/light/save.svg",
           "dark": "./resources/dark/save.svg"
         }
+      },
+      {
+        "command": "vscode-postgres.selectAsMcpDb",
+        "title": "Select as MCP Database",
+        "category": "PostgreSQL",
+        "icon": "node_modules/@vscode/codicons/src/icons/mcp.svg"
       }
     ],
     "menus": {
@@ -387,6 +393,11 @@
           "submenu": "postgres.select",
           "when": "view == postgres && viewItem == vscode-postgres.tree.table",
           "group": "postgres@0"
+        },
+        {
+          "command": "vscode-postgres.selectAsMcpDb",
+          "when": "view == postgres && viewItem == vscode-postgres.tree.database",
+          "group": "inline"
         }
       ],
       "postgres.select": [
@@ -465,6 +476,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.21.1",
+    "@vscode/codicons": "^0.0.42",
     "csv-stringify": "^5.6.2",
     "easyxml": "^2.0.1",
     "express": "^5.1.0",

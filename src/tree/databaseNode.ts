@@ -8,7 +8,7 @@ import { SchemaNode } from './schemaNode';
 
 export class DatabaseNode implements INode {
 
-  constructor(private readonly connection: IConnection) {}
+  constructor(public readonly connection: IConnection) {}
 
   public getTreeItem(): TreeItem {
     return {
