@@ -4,25 +4,74 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 
 import * as express from 'express';
 import * as postgres from 'postgres'
+import * as vscode from 'vscode';
 import { z } from 'zod';
-class Global {
-    public static sql?: postgres.Sql = undefined;
-    public static mcpServer?: McpServer = undefined;
-    public static app?: express.Express = undefined;
+import { IConnection } from "../common/IConnection";
+import { EditorState } from "../common/editorState";
+
+class MCPServerState {
+    public static mcpServer: McpServer | null = null;
+    public static app: express.Express | null = null;
+    /* Database connection info is used to compare and see if we need to re-initialize
+    */
+    private static _conn: IConnection | null = null;
+    private static _sql: postgres.Sql | null = null;
+
+    private static _this: MCPServerState | null = null;
+
+    public static get_instance(): MCPServerState {
+        if (!MCPServerState._this) {
+            MCPServerState._this = new MCPServerState();
+        }
+        return MCPServerState._this;
+    }
+
+    public static async get_sql(): Promise<postgres.Sql | null> {
+        if (EditorState.connection) {
+            if (!MCPServerState._sql || MCPServerState._conn !== EditorState.connection) {
+                if (MCPServerState._sql) {
+                    await MCPServerState._sql.end();
+                    MCPServerState.set_sql(null);
+                }
+                await initializeDatabase({
+                    host: EditorState.connection.host,
+                    port: EditorState.connection.port,
+                    database: EditorState.connection.database,
+                    user: EditorState.connection.user,
+                    password: EditorState.connection.password,
+                    ssl: !!EditorState.connection.ssl ? true : false
+                }).catch((error) => {
+                    console.error('Failed to initialize database connection:', error);
+                });
+                MCPServerState._conn = EditorState.connection;
+            }
+            return MCPServerState._sql;
+        } else {
+            return null;
+        }
+    };
+
+    public static set_sql(value: postgres.Sql | null) {
+        MCPServerState._sql = value;
+        MCPServerState._conn = null;
+    };
+
 };
 
 // Database connection setup
 
 async function initializeDatabase(options: postgres.Options<any>) {
     console.debug('Database connection established with options:', options);
-    Global.sql = postgres(options);
-    await Global.sql`SELECT 1`; // Test the connection
+    const sql = postgres(options);
+    await sql`SELECT 1`; // Test the connection
+    MCPServerState.set_sql(sql);
 }
 
 async function closeDatabase() {
-    if (Global.sql) {
-        await Global.sql.end();
-        Global.sql = undefined;
+    const sql = await MCPServerState.get_sql();
+    if (sql) {
+        await sql.end();
+        MCPServerState.set_sql(null);
     }
 }
 
@@ -46,17 +95,27 @@ export function formatSuccessResponse(data: any) {
     }],
     structuredContent: data
   };
-} 
+}
+
+async function getSqlWithBestEffort() {
+    let sql = await MCPServerState.get_sql();
+    if (!sql) {
+        await vscode.commands.executeCommand('vscode-postgres.selectConnection')
+        sql = await MCPServerState.get_sql();
+        if (!sql) {
+            throw new Error("Database connection is not initialized.");
+        }
+    }
+    return sql;
+}
 
 /**
  * List all tables in the database
  * @returns Array of the table names
  */
 async function listTables(): Promise<string[]> {
-    if (!Global.sql) {
-        throw new Error("Database connection is not initialized.");
-    }
-    const result = await Global.sql`
+    const sql = await getSqlWithBestEffort();
+    const result = await sql`
         SELECT tablename
         FROM pg_catalog.pg_tables
         WHERE schemaname NOT IN ('pg_catalog', 'information_schema');
@@ -92,10 +151,8 @@ server.registerTool(
  * @returns Column definitions for the table
  */
 export async function describeTable(tableName: string): Promise<any[]> {
-    if (!Global.sql) {
-        throw new Error("Database connection is not initialized.");
-    }
-    const result = await Global.sql`
+    const sql = await getSqlWithBestEffort();
+    const result = await sql`
         SELECT column_name, data_type, is_nullable
         FROM information_schema.columns
         WHERE table_name = ${tableName};
@@ -131,10 +188,8 @@ server.registerTool(
  * @returns Query results
  */
 export async function readQuery(query: string): Promise<any> {
-    if (!Global.sql) {
-        throw new Error("Database connection is not initialized.");
-    }
-    const result = await Global.sql.unsafe(query);
+    const sql = await getSqlWithBestEffort();
+    const result = await sql.unsafe(query);
     return result;
 }
 

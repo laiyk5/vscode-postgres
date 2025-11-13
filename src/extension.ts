@@ -97,16 +97,16 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(mcpServerHandler);
 
     // if there's any connection, update the MCP server connection to select the first one
-    try {
-      const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
-      if (connections) {
-        const firstConnectionKey = Object.keys(connections)[0];
-        const firstConnection = await getConnection(firstConnectionKey);
-        await updateMcpConnection(firstConnection);
-      }
-    } catch (err) {
-      console.error('MCP server registration error:', err);
-    }
+    // try {
+    //   const connections = Global.context.globalState.get<{ [key: string]: IConnection }>(Constants.GlobalStateKey);
+    //   if (connections) {
+    //     const firstConnectionKey = Object.keys(connections)[0];
+    //     const firstConnection = await getConnection(firstConnectionKey);
+    //     await updateMcpConnection(firstConnection);
+    //   }
+    // } catch (err) {
+    //   console.error('MCP server registration error:', err);
+    // }
   }
 }
 

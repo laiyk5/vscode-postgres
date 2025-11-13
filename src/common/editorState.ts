@@ -23,7 +23,7 @@ export class EditorState {
     return EditorState._instance;
   }
 
-  public static get connection(): IConnection {
+  public static get connection(): IConnection{
     let window = vscode.window;
     let te = window ? window.activeTextEditor : null;
     let doc = te ? te.document : null;
