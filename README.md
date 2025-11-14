@@ -25,6 +25,7 @@ It is possible there are some queries that won't run and report problems - even 
 * Connection aware code completion (keywords, functions, tables, and fields)
 * In-line error detection powered by EXPLAIN (one error per query in editor)
 * *__Basic__* function signature support (connection aware)
+* A build-in MCP server [![【Master/Software Engineering】DB MCP Server DEMO - VSCode Extension](https://i0.hdslb.com/bfs/archive/22dda0c58be2af0c269c46d919244894ba868ed5.jpg@672w_378h_1c.webp)](https://www.bilibili.com/video/BV17NCPBmEVA/?share_source=copy_web&vd_source=216745858ec9a3dce2b0d440d7ae8a34)
 
 ## Usage
 
