@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { z } from 'zod';
 import { IConnection } from "../common/IConnection";
 import { EditorState } from "../common/editorState";
+import { getPort } from "get-port-please";
 
 class MCPServerState {
     public static mcpServer: McpServer | null = null;
@@ -254,9 +255,13 @@ app.post('/set-connection', async (req, res) => {
     }
 });
 
-export function startMcpServer(): number {
+export async function startMcpServer(): Promise<number> {
     // Start the server
-    const port = parseInt(process.env.MCP_SERVER_PORT || '4000');
+    let port = await getPort({
+        port: 4000,
+        portRange: [8000,9000],
+        host: 'localhost'
+    })
     app.listen(port, () => {
         console.info(`Demo MCP Server running on http://localhost:${port}/mcp`);
         console.info(`Set connection on http://localhost:${port}/set-connection`);

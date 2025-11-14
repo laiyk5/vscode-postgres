@@ -67,9 +67,9 @@ export async function activate(context: vscode.ExtensionContext) {
   //   EditorState.getInstance().onDidChangeActiveTextEditor(vscode.window.activeTextEditor);
   // }
 
-  // spawn a new process and start a MCP server
+  // start the build-in MCP server
   try {
-    const port = startMcpServer();
+    const port = await startMcpServer();
     Global.McpServerUri = vscode.Uri.parse(`http://localhost:${port}/mcp`);
     vscode.window.showInformationMessage('MCP server for VS Code PostgreSQL extension started successfully.');
   } catch (err) {
