@@ -28,11 +28,11 @@ export async function activate(context: vscode.ExtensionContext) {
   EditorState.getInstance(languageClient);
 
   try {
-    let commandPath = context.asAbsolutePath(path.join('out', 'commands'));
+    let commandPath = context.asAbsolutePath(path.join('src', 'commands'));
     let files = fs.readdirSync(commandPath);
     for (const file of files) {
       if (path.extname(file) === '.map') continue;
-      let baseName = path.basename(file, '.js');
+      let baseName = path.basename(file, '.ts');
       let className = baseName + 'Command';
 
       let commandClass = require(`./commands/${baseName}`);
