@@ -12,6 +12,7 @@ import { ConfigFS } from './common/configFileSystem';
 import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
+import { SQLHistory } from './common/sqlHistory';
 
 
 // this method is called when your extension is activated
@@ -25,6 +26,9 @@ export async function activate(context: vscode.ExtensionContext) {
   let treeProvider: PostgreSQLTreeDataProvider = PostgreSQLTreeDataProvider.getInstance(context);
   Global.context = context;
   EditorState.getInstance(languageClient);
+
+  // 初始化 SQL 历史记录
+  SQLHistory.getInstance();
 
   try {
     let commandPath = context.asAbsolutePath(path.join('out', 'commands'));

@@ -6,6 +6,7 @@ import { PgClient } from './connection';
 import { IConnection } from "./IConnection";
 import { OutputChannel } from './outputChannel';
 import { performance } from 'perf_hooks';
+import { QueryHistoryManager } from './queryHistoryManager';
 
 export interface FieldInfo {
   columnID: number;
@@ -43,6 +44,17 @@ export interface TypeResults {
 let queryCounter: number = 0;
 
 export class Database {
+
+  private static queryHistoryManager = new QueryHistoryManager();
+
+  private static async executeQuery(sql: string, editor: vscode.TextEditor, connectionOptions: IConnection, showInCurrentPanel: boolean) {
+    let uri: string = '';
+    let title: string = '';
+    if (showInCurrentPanel) {
+      uri = editor.document.uri.toString();
+      title = path.basename(editor.document.fileName);
+    }
+  }
 
   // could probably be simplified, essentially matches Postgres' built-in algorithm without the char pointers
   static getQuotedIdent(name: string): string {
@@ -125,6 +137,11 @@ export class Database {
   }
 
   public static async runQuery(sql: string, editor: vscode.TextEditor, connectionOptions: IConnection, showInCurrentPanel: boolean = false) {
+  
+    if (!Database.queryHistoryManager.shouldRecordQuery(sql)) {
+      return this.executeQuery(sql, editor, connectionOptions, showInCurrentPanel);
+    }
+  
     // let uri = editor.document.uri.toString();
     // let title = path.basename(editor.document.fileName);
     // let resultsUri = vscode.Uri.parse('postgres-results://' + uri);
@@ -142,14 +159,22 @@ export class Database {
 
     OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Waiting for the query to complete...', showInCurrentPanel);
     let connection: PgClient = null;
-    try {
-      let startTime = performance.now();
+    let startTime = performance.now();
+    try {      
       connection = await Database.createConnection(connectionOptions);
       const typeNamesQuery = `select oid, format_type(oid, typtypmod) as display_type, typname from pg_type`;
       const types: TypeResults = await connection.query(typeNamesQuery);
       const res: QueryResults | QueryResults[] = await connection.query({ text: sql, rowMode: 'array' });
       const results: QueryResults[] = Array.isArray(res) ? res : [res];
       let durationText = Database.getDurationText(performance.now() - startTime);
+
+      // ✨ 使用 QueryHistoryManager 记录历史
+      await Database.queryHistoryManager.recordSuccessfulQuery(
+        sql,
+        results,
+        connectionOptions,
+        performance.now() - startTime
+      );
 
       OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Query completed in ' + durationText + '. Building results view...', showInCurrentPanel);
       vscode.window.showInformationMessage('Query completed in ' + durationText + '.');
@@ -167,6 +192,14 @@ export class Database {
         vscode.window.showTextDocument(editor.document, editor.viewColumn);
       }
     } catch (err) {
+
+      // ✨ 使用 QueryHistoryManager 记录失败
+      await Database.queryHistoryManager.recordFailedQuery(
+        sql,
+        connectionOptions,
+        performance.now() - startTime
+      );
+
       OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'ERROR: ' + err.message, showInCurrentPanel);
       OutputChannel.appendLine(err);
       vscode.window.showErrorMessage(err.message);
