@@ -34,7 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
   try {
     let commandPath = context.asAbsolutePath(path.join('src', 'commands'));
     let files = fs.readdirSync(commandPath);
-    console.log('Found command files:', files);
     
     for (const file of files) {
       if (path.extname(file) === '.map') continue;
@@ -47,7 +46,6 @@ export async function activate(context: vscode.ExtensionContext) {
   }
   catch (err) {
     console.error('Command loading error:', err);
-    vscode.window.showErrorMessage(`Failed to load PostgreSQL commands: ${err.message}`);
   }
 
   Global.ResultManager = new ResultsManager();

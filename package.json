@@ -50,6 +50,17 @@
       "type": "object",
       "title": "PostgreSQL",
       "properties": {
+        "vscode-postgres.sqlLint.caseStyle": {
+            "type": "string",
+            "enum": ["upper", "lower"],
+            "default": "upper",
+            "description": "SQL关键字大小写风格"
+        },
+        "vscode-postgres.sqlLint.indentSize": {
+            "type": "number",
+            "default": 4,
+            "description": "缩进空格数"
+        },
         "vscode-postgres.defaultConnection": {
           "type": "string",
           "default": "",
@@ -128,6 +139,16 @@
         "category": "PostgreSQL"
       },
       {
+        "command": "vscode-postgres.sqlLint",
+        "title": "SQL Lint",
+        "category": "PostgreSQL"
+      },
+      {
+          "command": "vscode-postgres.sqlLintSelection",
+          "when": "editorLangId == postgres && editorHasSelection",
+          "group": "navigation"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -174,6 +195,7 @@
       {
         "command": "vscode-postgres.selectTop1000",
         "title": "Select Top 1000",
+        "note": "这个title实际上会出现在UI界面上，右键，类似于print，没有参数传递和绑定，command不能改，要和UI对应",
         "category": "PostgreSQL"
       },
       {
@@ -248,6 +270,15 @@
           "command": "vscode-postgres.sqlHistoryVisualization",
           "when": "editorLangId == postgres",
           "group": "navigation"
+        },
+        {
+          "command": "vscode-postgres.sqlLint",
+          "when": "editorLangId == postgres",
+          "group": "navigation",
+          "icon": {
+            "light": "resources/light/lint.svg",
+            "dark": "resources/dark/lint.svg"
+          }
         }
       ],
       "view/title": [
@@ -258,6 +289,10 @@
         }
       ],
       "commandPalette": [
+         {
+            "command": "vscode-postgres.sqlLint",
+            "when": "editorLangId == postgres"
+        },
         {
           "command": "vscode-postgres.runQuery",
           "when": "editorLangId == postgres"
@@ -482,7 +517,7 @@
     "@types/mocha": "^2.2.42",
     "@types/node": "^12.20.55",
     "@types/pg": "^7.14.4",
-    "@types/uuid": "^8.3.0",
+    "@types/uuid": "^8.3.4",
     "@types/vscode": "^1.95.0",
     "ts-loader": "^8.0.4",
     "typescript": "^4.3.2",
