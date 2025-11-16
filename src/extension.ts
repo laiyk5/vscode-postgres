@@ -12,6 +12,7 @@ import { ConfigFS } from './common/configFileSystem';
 import { ResultsManager } from './resultsview/resultsManager';
 import { IConnection } from './common/IConnection';
 import { Constants } from './common/constants';
+import { SQLHistory } from './common/sqlHistory';
 import { updateMcpConnection, getConnection } from './mcp/updateMcpConnection';
 import { startMcpServer } from './mcp/server';
 
@@ -26,28 +27,27 @@ export async function activate(context: vscode.ExtensionContext) {
   let treeProvider: PostgreSQLTreeDataProvider = PostgreSQLTreeDataProvider.getInstance(context);
   Global.context = context;
   EditorState.getInstance(languageClient);
+  
+  // 初始化 SQL 历史记录
+  SQLHistory.getInstance();
 
   try {
     let commandPath = context.asAbsolutePath(path.join('src', 'commands'));
     let files = fs.readdirSync(commandPath);
+    console.log('Found command files:', files);
+    
     for (const file of files) {
       if (path.extname(file) === '.map') continue;
       let baseName = path.basename(file, '.ts');
       let className = baseName + 'Command';
 
       let commandClass = require(`./commands/${baseName}`);
-
-      // console.debug(`${commandClass.hasOwnProperty(className) ? 'Found' : 'Did not find'} command class ${className} in ./commands/${baseName}`);
-      // console.debug(`${className} has type ${typeof commandClass[className]}`);
-
-      console.debug(`Loading command: ${className}`);
-      console.warn(`The type of require(\`./commands/${baseName}\`)[${className}] is ${typeof commandClass[className]}`);
-
       new commandClass[className](context);
     }
   }
   catch (err) {
     console.error('Command loading error:', err);
+    vscode.window.showErrorMessage(`Failed to load PostgreSQL commands: ${err.message}`);
   }
 
   Global.ResultManager = new ResultsManager();

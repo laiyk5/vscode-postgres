@@ -6,6 +6,9 @@ import { PgClient } from './connection';
 import { IConnection } from "./IConnection";
 import { OutputChannel } from './outputChannel';
 import { performance } from 'perf_hooks';
+import { SQLHistory } from './sqlHistory';
+import { QueryHistoryManager } from './queryHistoryManager';
+
 
 export interface FieldInfo {
   columnID: number;
@@ -44,6 +47,7 @@ let queryCounter: number = 0;
 
 export class Database {
 
+  private static queryHistoryManager = new QueryHistoryManager();
   // could probably be simplified, essentially matches Postgres' built-in algorithm without the char pointers
   static getQuotedIdent(name: string): string {
     let result = '"';
@@ -124,10 +128,17 @@ export class Database {
     return String(sec) + ' sec';
   }
 
-  public static async runQuery(sql: string, editor: vscode.TextEditor, connectionOptions: IConnection, showInCurrentPanel: boolean = false) {
-    // let uri = editor.document.uri.toString();
-    // let title = path.basename(editor.document.fileName);
-    // let resultsUri = vscode.Uri.parse('postgres-results://' + uri);
+  public static async runQuery(
+    sql: string,
+    editor: vscode.TextEditor,
+    connectionOptions: IConnection,
+    showInCurrentPanel: boolean = false
+  ) {
+    // 检查是否需要记录历史
+    if (!Database.queryHistoryManager.shouldRecordQuery(sql)) {
+      return this.executeQuery(sql, editor, connectionOptions, showInCurrentPanel);
+    }
+
     let uri: string = '';
     let title: string = '';
     if (showInCurrentPanel) {
@@ -138,6 +149,74 @@ export class Database {
       uri = editor.document.uri.toString();
       title = path.basename(editor.document.fileName);
     }
+
+    const startTime = performance.now();
+    let resultsUri = vscode.Uri.parse('postgres-results://' + uri);
+
+    OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Waiting for the query to complete...', showInCurrentPanel);
+    let connection: PgClient = null;
+    try {
+      connection = await Database.createConnection(connectionOptions);
+      const typeNamesQuery = `select oid, format_type(oid, typtypmod) as display_type, typname from pg_type`;
+      const types: TypeResults = await connection.query(typeNamesQuery);
+      const res: QueryResults | QueryResults[] = await connection.query({ text: sql, rowMode: 'array' });
+      const results: QueryResults[] = Array.isArray(res) ? res : [res];
+      const endTime = performance.now();
+      let durationText = Database.getDurationText(endTime - startTime);
+
+      // ✨ 使用 QueryHistoryManager 记录历史
+      await Database.queryHistoryManager.recordSuccessfulQuery(
+        sql,
+        results,
+        connectionOptions,
+        endTime - startTime
+      );
+
+      OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Query completed in ' + durationText + '. Building results view...', showInCurrentPanel);
+      vscode.window.showInformationMessage('Query completed in ' + durationText + '.');
+      results.forEach((result) => {
+        result.fields.forEach((field) => {
+          let type = types.rows.find((t) => t.oid === field.dataTypeID);
+          if (type) {
+            field.format = type.typname;
+            field.display_type = type.display_type;
+          }
+        });
+      });
+
+      OutputChannel.displayResults(resultsUri, 'Results: ' + title, results, showInCurrentPanel);
+      if (!showInCurrentPanel) {
+        vscode.window.showTextDocument(editor.document, editor.viewColumn);
+      }
+    } catch (err) {
+      // ✨ 使用 QueryHistoryManager 记录失败
+      await Database.queryHistoryManager.recordFailedQuery(
+        sql,
+        connectionOptions,
+        performance.now() - startTime
+      );
+
+      OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'ERROR: ' + err.message, showInCurrentPanel);
+      OutputChannel.appendLine(err);
+      vscode.window.showErrorMessage(err.message);
+    } finally {
+      if (connection)
+        await connection.end();
+    }
+  }
+
+  private static async executeQuery(sql: string, editor: vscode.TextEditor, connectionOptions: IConnection, showInCurrentPanel: boolean) {
+    let uri: string = '';
+    let title: string = '';
+    if (showInCurrentPanel) {
+      queryCounter++;
+      uri = `unnamed-query-${queryCounter}`;
+      title = `Unnamed Query ${queryCounter}`;
+    } else {
+      uri = editor.document.uri.toString();
+      title = path.basename(editor.document.fileName);
+    }
+
     let resultsUri = vscode.Uri.parse('postgres-results://' + uri);
 
     OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'Waiting for the query to complete...', showInCurrentPanel);
@@ -170,11 +249,6 @@ export class Database {
       OutputChannel.displayMessage(resultsUri, 'Results: ' + title, 'ERROR: ' + err.message, showInCurrentPanel);
       OutputChannel.appendLine(err);
       vscode.window.showErrorMessage(err.message);
-      // vscode.window.showErrorMessage(err.message, "Show Console").then((button) => {
-      //   if (button === 'Show Console') {
-      //     OutputChannel.show();
-      //   }
-      // });
     } finally {
       if (connection)
         await connection.end();

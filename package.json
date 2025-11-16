@@ -118,6 +118,16 @@
     ],
     "commands": [
       {
+        "command": "vscode-postgres.viewHistory",
+        "title": "View History",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.sqlHistoryVisualization",
+        "title": "View History Visualization",
+        "category": "PostgreSQL"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -232,6 +242,11 @@
         {
           "command": "vscode-postgres.saveResult",
           "when": "vscodePostgresResultFocus",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-postgres.sqlHistoryVisualization",
+          "when": "editorLangId == postgres",
           "group": "navigation"
         }
       ],
@@ -457,7 +472,7 @@
   "scripts": {
     "vscode:prepublish": "npm run build-preview && npm run compile",
     "compile": "tsc -p ./",
-    "watch": "npm run build-preview-dev && tsc -watch -p ./",
+    "watch": "NODE_OPTIONS=--openssl-legacy-provider npm run build-preview-dev && tsc -watch -p ./",
     "build-preview-dev": "npx webpack --mode development",
     "build-preview": "npx webpack --mode production"
   },
