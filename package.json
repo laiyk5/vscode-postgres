@@ -231,6 +231,11 @@
           "command": "vscode-postgres.saveResult",
           "when": "vscodePostgresResultFocus",
           "group": "navigation"
+        },
+        {
+          "command": "vscode-postgres.sqlHistoryVisualization",
+          "when": "editorLangId == postgres",
+          "group": "navigation"
         }
       ],
       "view/title": [
