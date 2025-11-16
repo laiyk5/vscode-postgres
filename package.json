@@ -112,6 +112,16 @@
     ],
     "commands": [
       {
+        "command": "vscode-postgres.sqlHistoryVisualization",
+        "title": "SQL History Visualization",
+        "category": "PostgreSQL"
+      },
+      {
+        "command": "vscode-postgres.sqlLint",
+        "title": "SQL Lint",
+        "category": "PostgreSQL"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -217,6 +227,16 @@
     ],
     "menus": {
       "editor/title": [
+        {
+          "command": "vscode-postgres.sqlHistoryVisualization",
+          "when": "editorLangId == postgres",
+          "group": "navigation"
+        },
+        {
+          "command": "vscode-postgres.sqlLint",
+          "when": "editorLangId == postgres",
+          "group": "navigation"
+        },
         {
           "command": "vscode-postgres.saveResult",
           "when": "vscodePostgresResultFocus",
