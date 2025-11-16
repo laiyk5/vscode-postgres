@@ -112,6 +112,11 @@
     ],
     "commands": [
       {
+        "command": "vscode-postgres.sqlLint",
+        "title": "SQL Lint",
+        "category": "PostgreSQL"
+      },
+      {
         "command": "vscode-postgres.addConnection",
         "title": "Add Connection",
         "icon": {
@@ -158,6 +163,7 @@
       {
         "command": "vscode-postgres.selectTop1000",
         "title": "Select Top 1000",
+        "note": "这个title实际上会出现在UI界面上，右键，类似于print，没有参数传递和绑定，command不能改，要和UI对应",
         "category": "PostgreSQL"
       },
       {

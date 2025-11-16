@@ -37,3 +37,13 @@
         }
     ]
 }
+// 当你按 F5 时：
+// ​VS Code 读取 launch.json​
+
+// ​执行预启动任务​：npm run watch
+
+// ​启动新的 VS Code 实例​：code --extensionDevelopmentPath=当前项目路径
+
+// ​新窗口加载扩展开发版本​
+
+// ​在主窗口开始调试
