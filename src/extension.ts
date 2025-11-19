@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import PostgreSQLLanguageClient from './language/client';
-import { PostgreSQLTreeDataProvider } from './tree/treeProvider';
+import { PostgreSQLTreeDataProvider } from './tree/treeProvider'; 
 import { Global } from './common/global';
 import { EditorState } from './common/editorState';
 import { ConfigFS } from './common/configFileSystem';
