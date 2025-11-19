@@ -149,9 +149,10 @@
         "category": "PostgreSQL"
       },
       {
-          "command": "vscode-postgres.sqlLintSelection",
-          "when": "editorLangId == postgres && editorHasSelection",
-          "group": "navigation"
+        "command": "vscode-postgres.sqlLintSelection",
+        "when": "editorLangId == postgres && editorHasSelection",
+        "title": "SQL Lint Selection",
+        "group": "navigation"
       },
       {
         "command": "vscode-postgres.addConnection",
